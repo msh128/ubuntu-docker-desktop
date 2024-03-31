@@ -1,9 +1,11 @@
 FROM ubuntu:latest
 
-ENV TZ=Asia/Jakarta
+ENV TZ=Asia/Jakarta DEBIAN_FRONTEND=noninteractive
 ARG VARIANT
 
-RUN (export DEBIAN_FRONTEND=noninteractive \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' >/etc/apt/apt.conf.d/keep-cache \
     && apt -qq update --fix-missing \
     && apt -qq install -y software-properties-common \
     && add-apt-repository ppa:apt-fast/stable \
