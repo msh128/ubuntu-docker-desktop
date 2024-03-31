@@ -6,7 +6,7 @@ ARG VARIANT
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean \
     && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' >/etc/apt/apt.conf.d/keep-cache \
-    && apt -qq update --fix-missing \
+    (apt -qq update --fix-missing \
     && apt -qq install -y software-properties-common \
     && add-apt-repository ppa:apt-fast/stable \
     && apt -qq install -y apt-fast \
