@@ -3,7 +3,7 @@ permissions: write-all
 on:
   workflow_dispatch:
 env:
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GH_TOKEN: ${{ secrets.GH_PAT }}
 jobs:
   launch_instance:
     runs-on: ubuntu-latest
@@ -12,6 +12,7 @@ jobs:
       - run: |
           (sudo apt -qq update && sudo apt -qq upgrade -y) > /dev/null 2>&1
           ssh-keygen -t ed25519 -q -f "$HOME/.ssh/id_ed25519" -N "" && chmod 600 "$HOME/.ssh/id_ed25519"
+          echo ${{ env.GH_TOKEN }} > "$HOME/.gh-token" && chmod 600 "$HOME/.gh-token"
           curl -sL -o /usr/local/bin/ttyd $(curl -s 'https://api.github.com/repos/tsl0922/ttyd/releases/latest' | jq -r '.assets[] | select(.name|contains("x86_64")).browser_download_url') && sudo chmod a+x /usr/local/bin/ttyd
           /usr/local/bin/ttyd -p 7681 -W -t titleFixed="ttyd - ${{ github.repository }}" -t fontSize=13 -t fontFamily=monospace -m 1 /bin/bash -lc 'source ~/.bashrc; /usr/bin/tmux a || /usr/bin/tmux' > /dev/null 2>&1 &
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes -o ServerAliveInterval=5 -T srv.us -R 1:127.0.0.1:7681 > /tmp/srv.us.addr 2> /dev/null &
