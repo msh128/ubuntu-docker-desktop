@@ -75,3 +75,5 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      - name: Trigger next stage build
+        run: gh workflow run stage3.yml -f variant=${{ inputs.variant }}
