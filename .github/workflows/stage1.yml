@@ -62,6 +62,7 @@ jobs:
           context: ./${{ env.IMAGE_NAME }}
           push: true
           platforms: linux/amd64
+          provenance: false
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.variant }}
           build-args: VARIANT=${{ inputs.variant }}
           cache-from: type=local,src=/tmp/.buildx-cache
