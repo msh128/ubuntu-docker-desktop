@@ -8,7 +8,6 @@ jobs:
   launch_instance:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - run: |
           (sudo apt -qq update && sudo apt -qq upgrade -y) > /dev/null 2>&1
           ssh-keygen -t ed25519 -q -f "$HOME/.ssh/id_ed25519" -N "" && chmod 600 "$HOME/.ssh/id_ed25519"
