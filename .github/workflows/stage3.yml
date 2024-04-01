@@ -22,11 +22,14 @@ jobs:
       packages: write
       id-token: write
     steps:
-      - name: Checkout repository
+      - name: Checkout runner repository
+        uses: actions/checkout@v4.1.1
+      - name: Checkout Docker source repository
         uses: actions/checkout@v4.1.1
         with:
           repository: ${{ env.IMAGE_NAME }}
           token: ${{ secrets.GH_PAT }}
+          path: ${{ env.IMAGE_NAME }}
       - name: Install cosign
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@v3.4.0
@@ -55,7 +58,7 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@v5.3.0
         with:
-          context: .
+          context: ./${{ env.IMAGE_NAME }}
           push: true
           platforms: linux/amd64
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.variant }}
