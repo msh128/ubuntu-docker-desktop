@@ -14,6 +14,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: msh128/ubuntu-docker-desktop
+  GH_TOKEN: ${{ secrets.GH_PAT }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,7 +29,7 @@ jobs:
         uses: actions/checkout@v4.1.1
         with:
           repository: ${{ env.IMAGE_NAME }}
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ env.GH_TOKEN }}
           path: ${{ env.IMAGE_NAME }}
       - name: Install cosign
         if: github.event_name != 'pull_request'
@@ -48,7 +49,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GH_PAT }}
+          password: ${{ env.GH_TOKEN }}
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5.5.1
