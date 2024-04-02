@@ -1,9 +1,10 @@
 FROM ubuntu:latest
 
-ENV TZ=Asia/Jakarta DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Jakarta
+ENV DEBIAN_FRONTEND=noninteractive
 ARG VARIANT
 
-RUN (apt -qq update --fix-missing \
+RUN apt -qq update --fix-missing \
     && apt -qq install -y software-properties-common \
     && add-apt-repository ppa:apt-fast/stable \
     && apt -qq install -y apt-fast \
@@ -14,4 +15,4 @@ RUN (apt -qq update --fix-missing \
         *) apt-fast -qq install -y ${VARIANT};; \
       esac \
     && for a in autoremove purge clean; do apt -qq $a; done \
-    && rm -rf /var/lib/apt/lists/*) > /dev/null 2>&1
+    && rm -rf /var/lib/apt/lists/*
