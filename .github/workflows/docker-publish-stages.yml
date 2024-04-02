@@ -2,6 +2,14 @@ name: "Build and publish all variant"
 permissions: write-all
 on:
   workflow_dispatch:
+    inputs:
+      stages:
+        type: choice
+        description: Select from which stage to start
+        options:
+        - stage1
+        - stage2
+        - stage3
   schedule:
     - cron: "0 0 * * 0"
 env:
@@ -14,5 +22,5 @@ jobs:
       - run: |
           for a in xubuntu-core kde-plasma-desktop cinnamon ubuntu-mate-core lubuntu-desktop
             do
-              gh workflow run stage1.yml -f variant=$a
+              gh workflow run ${{ inputs.stages }}.yml -f variant=$a
           done
