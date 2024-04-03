@@ -33,6 +33,7 @@ jobs:
           path: ${{ env.IMAGE_NAME }}
       - name: Initial checks
         id: check
+        shell: bash
         run: |
           case ${{ inputs.variant }} in
             xubuntu-core)
@@ -100,6 +101,7 @@ jobs:
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
         if: ${{ steps.check.outputs.rebuild == 'true' && github.event_name != 'pull_request' }}
       - name: Update repo variables
+        shell: bash
         run: |
           case ${{ inputs.variant }} in
             xubuntu-core)
