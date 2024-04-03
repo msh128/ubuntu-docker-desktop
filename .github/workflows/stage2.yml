@@ -58,8 +58,8 @@ jobs:
           esac
           echo "STAGE2_LAST_BUILD=$STAGE2_LAST_BUILD" >> $GITHUB_ENV
           echo "STAGE2_DOCKERFILE_LAST_HASH=$STAGE2_DOCKERFILE_LAST_HASH" >> $GITHUB_ENV
-          [ "$((($(date +%s)-$(date +%s --date ${{ vars.STAGE2_LAST_BUILD }}))/(3600*24)))" -gt 30 ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
-          [ $(md5sum ${{ env.IMAGE_NAME }}/Dockerfile) != ${{ vars.STAGE2_DOCKERFILE_LAST_HASH }} }} ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
+          [ "$((($(date +%s)-$(date +%s --date $STAGE2_LAST_BUILD))/(3600*24)))" -gt 30 ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
+          [ $(md5sum ${{ env.IMAGE_NAME }}/Dockerfile) != $STAGE2_DOCKERFILE_LAST_HASH ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.4.0
         if: ${{ steps.check.outputs.rebuild == 'true' && github.event_name != 'pull_request' }}
