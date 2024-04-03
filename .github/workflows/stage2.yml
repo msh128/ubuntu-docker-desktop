@@ -114,5 +114,30 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
         if: ${{ steps.check.outputs.rebuild == 'true' }}
+      - name: Update repo variables
+        run: |
+          case ${{ inputs.variant }} in
+            xubuntu-core)
+              gh variable set STAGE2_LAST_BUILD_XUBUNTU_CORE --body "$(date +%Y-%m-%d)"
+              gh variable set STAGE2_DOCKERFILE_LAST_HASH_XUBUNTU_CORE --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              ;;
+            kde-plasma-desktop)
+              gh variable set STAGE2_LAST_BUILD_KDE_PLASMA_DESKTOP --body "$(date +%Y-%m-%d)"
+              gh variable set STAGE2_DOCKERFILE_LAST_HASH_KDE_PLASMA_DESKTOP --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              ;;
+            cinnamon)
+              gh variable set STAGE2_LAST_BUILD_CINNAMON --body "$(date +%Y-%m-%d)"
+              gh variable set STAGE2_DOCKERFILE_LAST_HASH_CINNAMON --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              ;;
+            ubuntu-mate-core)
+              gh variable set STAGE2_LAST_BUILD_UBUNTU_MATE_CORE --body "$(date +%Y-%m-%d)"
+              gh variable set STAGE2_DOCKERFILE_LAST_HASH_UBUNTU_MATE_CORE --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              ;;
+            lubuntu-desktop)
+              gh variable set STAGE2_LAST_BUILD_LUBUNTU_DESKTOP --body "$(date +%Y-%m-%d)"
+              gh variable set STAGE2_DOCKERFILE_LAST_HASH_LUBUNTU_DESKTOP --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              ;;
+          esac
+        if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Trigger next stage build
         run: gh workflow run stage3.yml -f variant=${{ inputs.variant }}
