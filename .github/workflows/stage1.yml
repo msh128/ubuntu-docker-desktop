@@ -11,8 +11,6 @@ on:
         - cinnamon
         - ubuntu-mate-core
         - lubuntu-desktop
-  schedule:
-    - cron: "0 0 * * 0"
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: msh128/ubuntu-docker-desktop
