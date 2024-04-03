@@ -31,25 +31,57 @@ jobs:
           repository: ${{ env.IMAGE_NAME }}
           token: ${{ env.GH_TOKEN }}
           path: ${{ env.IMAGE_NAME }}
+      - name: Initial checks
+        id: check
+        run: |
+          case ${{ inputs.variant }} in
+            xubuntu-core)
+              export STAGE3_LAST_BUILD=${{ vars.STAGE3_LAST_BUILD_XUBUNTU_CORE }}
+              export STAGE3_DOCKERFILE_LAST_HASH=${{ vars.STAGE3_DOCKERFILE_LAST_HASH_XUBUNTU_CORE }}
+              ;;
+            kde-plasma-desktop)
+              export STAGE3_LAST_BUILD=${{ vars.STAGE3_LAST_BUILD_KDE_PLASMA_DESKTOP }}
+              export STAGE3_DOCKERFILE_LAST_HASH=${{ vars.STAGE3_DOCKERFILE_LAST_HASH_KDE_PLASMA_DESKTOP }}
+              ;;
+            cinnamon)
+              export STAGE3_LAST_BUILD=${{ vars.STAGE3_LAST_BUILD_CINNAMON }}
+              export STAGE3_DOCKERFILE_LAST_HASH=${{ vars.STAGE3_DOCKERFILE_LAST_HASH_CINNAMON }}
+              ;;
+            ubuntu-mate-core)
+              export STAGE3_LAST_BUILD=${{ vars.STAGE3_LAST_BUILD_UBUNTU_MATE_CORE }}
+              export STAGE3_DOCKERFILE_LAST_HASH=${{ vars.STAGE3_DOCKERFILE_LAST_HASH_UBUNTU_MATE_CORE }}
+              ;;
+            lubuntu-desktop)
+              export STAGE3_LAST_BUILD=${{ vars.STAGE3_LAST_BUILD_LUBUNTU_DESKTOP }}
+              export STAGE3_DOCKERFILE_LAST_HASH=${{ vars.STAGE3_DOCKERFILE_LAST_HASH_LUBUNTU_DESKTOP }}
+              ;;
+          esac
+          echo "STAGE3_LAST_BUILD=$STAGE3_LAST_BUILD" >> $GITHUB_ENV
+          echo "STAGE3_DOCKERFILE_LAST_HASH=$STAGE3_DOCKERFILE_LAST_HASH" >> $GITHUB_ENV
+          [ "$((($(date +%s)-$(date +%s --date ${{ vars.STAGE3_LAST_BUILD }}))/(3600*24)))" -gt 30 ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
+          [ $(md5sum ${{ env.IMAGE_NAME }}/Dockerfile) != ${{ vars.STAGE3_DOCKERFILE_LAST_HASH }} }} ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
       - name: Install cosign
-        if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@v3.4.0
+        if: ${{ steps.check.outputs.rebuild == 'true' && github.event_name != 'pull_request' }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.2.0
+        if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3.1.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ env.GH_TOKEN }}
+        if: ${{ steps.check.outputs.rebuild == 'true' && github.event_name != 'pull_request' }}
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Modify Dockerfile to match requested variant
         run: sed -i "s/ubuntu-docker-base:variant/ubuntu-docker-base:${{ inputs.variant }}/g" ${{ env.IMAGE_NAME }}/Dockerfile
+        if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Build and push ${{ inputs.variant }}
         id: build-and-push
         uses: docker/build-push-action@v5.3.0
@@ -60,9 +92,35 @@ jobs:
           provenance: false
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.variant }}
           build-args: VARIANT=${{ inputs.variant }}
+        if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+        if: ${{ steps.check.outputs.rebuild == 'true' && github.event_name != 'pull_request' }}
+      - name: Update repo variables
+        run: |
+          case ${{ inputs.variant }} in
+            xubuntu-core)
+              gh variable set STAGE3_LAST_BUILD_XUBUNTU_CORE --body "$(date +%Y-%m-%d)"
+              gh variable set STAGE3_DOCKERFILE_LAST_HASH_XUBUNTU_CORE --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              ;;
+            kde-plasma-desktop)
+              gh variable set STAGE3_LAST_BUILD_KDE_PLASMA_DESKTOP --body "$(date +%Y-%m-%d)"
+              gh variable set STAGE3_DOCKERFILE_LAST_HASH_KDE_PLASMA_DESKTOP --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              ;;
+            cinnamon)
+              gh variable set STAGE3_LAST_BUILD_CINNAMON --body "$(date +%Y-%m-%d)"
+              gh variable set STAGE3_DOCKERFILE_LAST_HASH_CINNAMON --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              ;;
+            ubuntu-mate-core)
+              gh variable set STAGE3_LAST_BUILD_UBUNTU_MATE_CORE --body "$(date +%Y-%m-%d)"
+              gh variable set STAGE3_DOCKERFILE_LAST_HASH_UBUNTU_MATE_CORE --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              ;;
+            lubuntu-desktop)
+              gh variable set STAGE3_LAST_BUILD_LUBUNTU_DESKTOP --body "$(date +%Y-%m-%d)"
+              gh variable set STAGE3_DOCKERFILE_LAST_HASH_LUBUNTU_DESKTOP --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              ;;
+          esac
+        if: ${{ steps.check.outputs.rebuild == 'true' }}
