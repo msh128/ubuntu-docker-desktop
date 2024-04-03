@@ -26,7 +26,7 @@ jobs:
       - name: Initial checks
         id: check
         run: |
-          [ "$((($(date +%s)-$(date +%s --date ${{ vars.STAGE1_LAST_BUILD }}))/(3600*24)))" -gt 30 ] && echo "::set-output name=rebuild::true"
+          [ "$((($(date +%s)-$(date +%s --date ${{ vars.STAGE1_LAST_BUILD }}))/(3600*24)))" -gt 30 ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
       - name: Checkout runner repository
         uses: actions/checkout@v4.1.1
         if: ${{ steps.check.outputs.rebuild == 'true' }}
