@@ -31,9 +31,39 @@ jobs:
           repository: ${{ env.IMAGE_NAME }}
           token: ${{ env.GH_TOKEN }}
           path: ${{ env.IMAGE_NAME }}
+      - name: Initial checks
+        id: check
+        run: |
+          case ${{ inputs.variant }} in
+            xubuntu-core)
+              export STAGE2_LAST_BUILD=${{ vars.STAGE2_LAST_BUILD_XUBUNTU_CORE }}
+              export STAGE2_DOCKERFILE_LAST_HASH=${{ vars.STAGE2_DOCKERFILE_LAST_HASH_XUBUNTU_CORE }}
+              ;;
+            kde-plasma-desktop)
+              export STAGE2_LAST_BUILD=${{ vars.STAGE2_LAST_BUILD_KDE_PLASMA_DESKTOP }}
+              export STAGE2_DOCKERFILE_LAST_HASH=${{ vars.STAGE2_DOCKERFILE_LAST_HASH_KDE_PLASMA_DESKTOP }}
+              ;;
+            cinnamon)
+              export STAGE2_LAST_BUILD=${{ vars.STAGE2_LAST_BUILD_CINNAMON }}
+              export STAGE2_DOCKERFILE_LAST_HASH=${{ vars.STAGE2_DOCKERFILE_LAST_HASH_CINNAMON }}
+              ;;
+            ubuntu-mate-core)
+              export STAGE2_LAST_BUILD=${{ vars.STAGE2_LAST_BUILD_UBUNTU_MATE_CORE }}
+              export STAGE2_DOCKERFILE_LAST_HASH=${{ vars.STAGE2_DOCKERFILE_LAST_HASH_UBUNTU_MATE_CORE }}
+              ;;
+            lubuntu-desktop)
+              export STAGE2_LAST_BUILD=${{ vars.STAGE2_LAST_BUILD_LUBUNTU_DESKTOP }}
+              export STAGE2_DOCKERFILE_LAST_HASH=${{ vars.STAGE2_DOCKERFILE_LAST_HASH_LUBUNTU_DESKTOP }}
+              ;;
+          esac
+          echo "STAGE2_LAST_BUILD=$STAGE2_LAST_BUILD" >> $GITHUB_ENV
+          echo "STAGE2_DOCKERFILE_LAST_HASH=$STAGE2_DOCKERFILE_LAST_HASH" >> $GITHUB_ENV
+          [ "$((($(date +%s)-$(date +%s --date ${{ vars.STAGE2_LAST_BUILD }}))/(3600*24)))" -gt 30 ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
+          [ $(md5sum ${{ env.IMAGE_NAME }}/Dockerfile) != ${{ vars.STAGE2_DOCKERFILE_LAST_HASH }} }} ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
       - name: Install cosign
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@v3.4.0
+        if: ${{ steps.check.outputs.rebuild == 'true' && github.event_name != 'pull_request' }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.2.0
       - name: Cache Docker layers
@@ -43,20 +73,23 @@ jobs:
           key: ${{ runner.os }}-buildx-stage2-${{ inputs.variant }}
           restore-keys: |
             ${{ runner.os }}-buildx-stage2-
+        if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3.1.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ env.GH_TOKEN }}
+        if: ${{ steps.check.outputs.rebuild == 'true' && github.event_name != 'pull_request' }}
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Modify Dockerfile to match requested variant
         run: sed -i "s/ubuntu-docker-desktop:variant/ubuntu-docker-desktop:${{ inputs.variant }}/g" ${{ env.IMAGE_NAME }}/Dockerfile
+        if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Build and push ${{ inputs.variant }}
         id: build-and-push
         uses: docker/build-push-action@v5.3.0
@@ -69,15 +102,17 @@ jobs:
           build-args: VARIANT=${{ inputs.variant }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+        if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+        if: ${{ steps.check.outputs.rebuild == 'true' && github.event_name != 'pull_request' }}
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+        if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Trigger next stage build
         run: gh workflow run stage3.yml -f variant=${{ inputs.variant }}
