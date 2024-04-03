@@ -33,6 +33,7 @@ jobs:
           path: ${{ env.IMAGE_NAME }}
       - name: Initial checks
         id: check
+        shell: bash
         run: |
           case ${{ inputs.variant }} in
             xubuntu-core)
