@@ -37,24 +37,24 @@ jobs:
         run: |
           case ${{ inputs.variant }} in
             xubuntu-core)
-              export STAGE1_LAST_BUILD=${{ vars.STAGE1_LAST_BUILD_XUBUNTU_CORE }}
-              export STAGE1_DOCKERFILE_LAST_HASH=${{ vars.STAGE1_DOCKERFILE_LAST_HASH_XUBUNTU_CORE }}
+              export STAGE1_LAST_BUILD="${{ vars.STAGE1_LAST_BUILD_XUBUNTU_CORE }}"
+              export STAGE1_DOCKERFILE_LAST_HASH=${{ vars.STAGE1_DOCKERFILE_LAST_HASH_XUBUNTU_CORE }}"
               ;;
             kde-plasma-desktop)
-              export STAGE1_LAST_BUILD=${{ vars.STAGE1_LAST_BUILD_KDE_PLASMA_DESKTOP }}
-              export STAGE1_DOCKERFILE_LAST_HASH=${{ vars.STAGE1_DOCKERFILE_LAST_HASH_KDE_PLASMA_DESKTOP }}
+              export STAGE1_LAST_BUILD="${{ vars.STAGE1_LAST_BUILD_KDE_PLASMA_DESKTOP }}"
+              export STAGE1_DOCKERFILE_LAST_HASH=${{ vars.STAGE1_DOCKERFILE_LAST_HASH_KDE_PLASMA_DESKTOP }}"
               ;;
             cinnamon)
-              export STAGE1_LAST_BUILD=${{ vars.STAGE1_LAST_BUILD_CINNAMON }}
-              export STAGE1_DOCKERFILE_LAST_HASH=${{ vars.STAGE1_DOCKERFILE_LAST_HASH_CINNAMON }}
+              export STAGE1_LAST_BUILD="${{ vars.STAGE1_LAST_BUILD_CINNAMON }}"
+              export STAGE1_DOCKERFILE_LAST_HASH=${{ vars.STAGE1_DOCKERFILE_LAST_HASH_CINNAMON }}"
               ;;
             ubuntu-mate-core)
-              export STAGE1_LAST_BUILD=${{ vars.STAGE1_LAST_BUILD_UBUNTU_MATE_CORE }}
-              export STAGE1_DOCKERFILE_LAST_HASH=${{ vars.STAGE1_DOCKERFILE_LAST_HASH_UBUNTU_MATE_CORE }}
+              export STAGE1_LAST_BUILD="${{ vars.STAGE1_LAST_BUILD_UBUNTU_MATE_CORE }}"
+              export STAGE1_DOCKERFILE_LAST_HASH=${{ vars.STAGE1_DOCKERFILE_LAST_HASH_UBUNTU_MATE_CORE }}"
               ;;
             lubuntu-desktop)
-              export STAGE1_LAST_BUILD=${{ vars.STAGE1_LAST_BUILD_LUBUNTU_DESKTOP }}
-              export STAGE1_DOCKERFILE_LAST_HASH=${{ vars.STAGE1_DOCKERFILE_LAST_HASH_LUBUNTU_DESKTOP }}
+              export STAGE1_LAST_BUILD="${{ vars.STAGE1_LAST_BUILD_LUBUNTU_DESKTOP }}"
+              export STAGE1_DOCKERFILE_LAST_HASH=${{ vars.STAGE1_DOCKERFILE_LAST_HASH_LUBUNTU_DESKTOP }}"
               ;;
           esac
           echo "STAGE1_LAST_BUILD=$STAGE1_LAST_BUILD" >> $GITHUB_ENV
@@ -116,26 +116,27 @@ jobs:
       - name: Update repo variables
         shell: bash
         run: |
+		  STAGE1_DOCKERFILE_CURRENT_HASH=$($(md5sum ${{ env.IMAGE_NAME }}/Dockerfile))
           case ${{ inputs.variant }} in
             xubuntu-core)
               gh variable set STAGE1_LAST_BUILD_XUBUNTU_CORE --body "$(date +%Y-%m-%d)"
-              gh variable set STAGE1_DOCKERFILE_LAST_HASH_XUBUNTU_CORE --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              gh variable set STAGE1_DOCKERFILE_LAST_HASH_XUBUNTU_CORE --body "$STAGE1_DOCKERFILE_CURRENT_HASH"
               ;;
             kde-plasma-desktop)
               gh variable set STAGE1_LAST_BUILD_KDE_PLASMA_DESKTOP --body "$(date +%Y-%m-%d)"
-              gh variable set STAGE1_DOCKERFILE_LAST_HASH_KDE_PLASMA_DESKTOP --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              gh variable set STAGE1_DOCKERFILE_LAST_HASH_KDE_PLASMA_DESKTOP --body "$STAGE1_DOCKERFILE_CURRENT_HASH"
               ;;
             cinnamon)
               gh variable set STAGE1_LAST_BUILD_CINNAMON --body "$(date +%Y-%m-%d)"
-              gh variable set STAGE1_DOCKERFILE_LAST_HASH_CINNAMON --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              gh variable set STAGE1_DOCKERFILE_LAST_HASH_CINNAMON --body "$(md5sum $STAGE1_DOCKERFILE_CURRENT_HASH"
               ;;
             ubuntu-mate-core)
               gh variable set STAGE1_LAST_BUILD_UBUNTU_MATE_CORE --body "$(date +%Y-%m-%d)"
-              gh variable set STAGE1_DOCKERFILE_LAST_HASH_UBUNTU_MATE_CORE --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              gh variable set STAGE1_DOCKERFILE_LAST_HASH_UBUNTU_MATE_CORE --body "$STAGE1_DOCKERFILE_CURRENT_HASH"
               ;;
             lubuntu-desktop)
               gh variable set STAGE1_LAST_BUILD_LUBUNTU_DESKTOP --body "$(date +%Y-%m-%d)"
-              gh variable set STAGE1_DOCKERFILE_LAST_HASH_LUBUNTU_DESKTOP --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+              gh variable set STAGE1_DOCKERFILE_LAST_HASH_LUBUNTU_DESKTOP --body "$STAGE1_DOCKERFILE_CURRENT_HASH"
               ;;
           esac
         if: ${{ steps.check.outputs.rebuild == 'true' }}
