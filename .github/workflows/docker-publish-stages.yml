@@ -22,5 +22,5 @@ jobs:
       - run: |
           for a in xubuntu-core kde-plasma-desktop cinnamon ubuntu-mate-core lubuntu-desktop
             do
-              gh workflow run ${{ inputs.stages }}.yml -f variant=$a
+              gh workflow run ${{ inputs.stages || 'stage1' }}.yml -f variant=$a
           done
