@@ -60,7 +60,7 @@ jobs:
           echo "STAGE1_LAST_BUILD=$STAGE1_LAST_BUILD" >> $GITHUB_ENV
           echo "STAGE1_DOCKERFILE_LAST_HASH=$STAGE1_DOCKERFILE_LAST_HASH" >> $GITHUB_ENV
           [ "$((($(date +%s)-$(date +%s --date $STAGE1_LAST_BUILD))/(3600*24)))" -gt 30 ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
-          STAGE1_DOCKERFILE_CURRENT_HASH=$($(md5sum ${{ env.IMAGE_NAME }}/Dockerfile))
+          export STAGE1_DOCKERFILE_CURRENT_HASH=${{ hashFiles('${{ env.IMAGE_NAME }}/Dockerfile') }}
           [ "$STAGE1_DOCKERFILE_CURRENT_HASH" != "$STAGE1_DOCKERFILE_LAST_HASH" ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.4.0
