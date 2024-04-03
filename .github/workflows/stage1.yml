@@ -116,7 +116,7 @@ jobs:
       - name: Update repo variables
         shell: bash
         run: |
-          STAGE1_DOCKERFILE_CURRENT_HASH=$($(md5sum ${{ env.IMAGE_NAME }}/Dockerfile))
+          export STAGE1_DOCKERFILE_CURRENT_HASH=${{ hashFiles('${{ env.IMAGE_NAME }}/Dockerfile') }}
           case ${{ inputs.variant }} in
             xubuntu-core)
               gh variable set STAGE1_LAST_BUILD_XUBUNTU_CORE --body "$(date +%Y-%m-%d)"
