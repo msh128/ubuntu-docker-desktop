@@ -34,7 +34,8 @@ jobs:
       - name: Initial checks
         id: check
         run: |
-          echo "VARIANT=$(echo ${{ inputs.variant }} | sed 's/-/_/g')" >> $GITHUB_ENV
+          export variant=$(echo ${{ inputs.variant }} | sed 's/-/_/g')
+          echo "VARIANT=$variant" >> $GITHUB_ENV
           [ "$((($(date +%s)-$(date +%s --date ${{ vars.STAGE1_LAST_BUILD_${{ inputs.variant }} }}))/(3600*24)))" -gt 30 ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
           [ $(md5sum ${{ env.IMAGE_NAME }}/Dockerfile) != ${{ vars.STAGE1_DOCKERFILE_LAST_HASH_${{ env.VARIANT }} }} ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
       - name: Install cosign
