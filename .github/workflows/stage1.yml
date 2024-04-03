@@ -34,8 +34,9 @@ jobs:
       - name: Initial checks
         id: check
         run: |
+          echo "VARIANT=$(echo ${{ inputs.variant }} | sed 's/-/_/g')" >> $GITHUB_ENV
           [ "$((($(date +%s)-$(date +%s --date ${{ vars.STAGE1_LAST_BUILD_${{ inputs.variant }} }}))/(3600*24)))" -gt 30 ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
-          [ $(md5sum ${{ env.IMAGE_NAME }}/Dockerfile) != ${{ vars.STAGE1_DOCKERFILE_LAST_HASH_${{ inputs.variant }} }} ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
+          [ $(md5sum ${{ env.IMAGE_NAME }}/Dockerfile) != ${{ vars.STAGE1_DOCKERFILE_LAST_HASH_${{ env.VARIANT }} }} ] && echo "::set-output name=rebuild::true" || echo "::set-output name=rebuild::false"
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.4.0
         if: ${{ steps.check.outputs.rebuild == 'true' && github.event_name != 'pull_request' }}
@@ -90,7 +91,7 @@ jobs:
       - name: Update repo variables
         run: |
           gh variable set STAGE1_LAST_BUILD_${{ inputs.variant }} --body "$(date +%Y-%m-%d)"
-          gh variable set STAGE1_DOCKERFILE_LAST_HASH_${{ inputs.variant }} --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
+          gh variable set STAGE1_DOCKERFILE_LAST_HASH_${{ env.VARIANT }} --body "$(md5sum ${{ env.IMAGE_NAME }}/Dockerfile)"
         if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Trigger next stage build
         run: gh workflow run stage2.yml -f variant=${{ inputs.variant }}
