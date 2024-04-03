@@ -116,6 +116,7 @@ jobs:
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
         if: ${{ steps.check.outputs.rebuild == 'true' }}
       - name: Update repo variables
+        shell: bash
         run: |
           case ${{ inputs.variant }} in
             xubuntu-core)
